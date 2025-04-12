@@ -1,4 +1,4 @@
-package com.swordhealth.catsapp.ui.theme
+package com.catsapp.ui.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle

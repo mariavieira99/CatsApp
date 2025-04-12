@@ -1,4 +1,4 @@
-package com.swordhealth.catsapp.ui.theme
+package com.catsapp.ui.theme
 
 import androidx.compose.ui.graphics.Color
 

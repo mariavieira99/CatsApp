@@ -16,6 +16,12 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField(
+            "String",
+            "CAT_API_KEY",
+            "\"${project.findProperty("CAT_API_KEY")}\""
+        )
     }
 
     buildTypes {
@@ -36,6 +42,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -56,4 +63,11 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+
+    implementation(libs.io.coil.kt)
+    implementation(libs.io.coil.kt.network)
+    implementation(libs.com.google.code.gson)
+    implementation(libs.com.squareup.retrofit)
+    implementation(libs.com.squareup.retrofit.converter)
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
 }
