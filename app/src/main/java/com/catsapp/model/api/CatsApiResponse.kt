@@ -17,5 +17,15 @@ data class ImageResponse(
 )
 
 data class FavouriteCatResponse(
+    @SerializedName("id") val id: Int,
     @SerializedName("image_id") val imageId: String,
+)
+
+data class AddFavouriteCatResponse(
+    @SerializedName("message") val message: String,
+    @SerializedName("id") val id: Int,
+)
+
+data class RemoveFavouriteCatResponse(
+    @SerializedName("message") val message: String,
 )

@@ -1,6 +1,7 @@
 package com.catsapp.model
 
 import com.catsapp.model.api.CatResponse
+import com.catsapp.model.db.CatModel
 
 data class Cat(
     val id: String,
@@ -10,6 +11,7 @@ data class Cat(
     val origin: String,
     val temperament: String,
     val description: String,
+    val favouriteId: Int,
     val isFavourite: Boolean,
 )
 
@@ -24,5 +26,36 @@ fun CatResponse.mapToCat() = Cat(
     origin = origin,
     temperament = temperament,
     description = description,
+    favouriteId = -1,
     isFavourite = false,
+)
+
+/**
+ * Map DB response to [Cat] data class
+ */
+fun CatModel.mapToCat() = Cat(
+    id = id,
+    breedName = breedName,
+    imageId = imageId,
+    imageUrl = imageUrl,
+    origin = origin,
+    temperament = temperament,
+    description = description,
+    favouriteId = favouriteId,
+    isFavourite = isFavourite,
+)
+
+/**
+ * Map DB response to [Cat] data class
+ */
+fun Cat.mapToCatModel() = CatModel(
+    id = id,
+    breedName = breedName,
+    imageId = imageId,
+    imageUrl = imageUrl,
+    origin = origin,
+    temperament = temperament,
+    description = description,
+    favouriteId = favouriteId,
+    isFavourite = isFavourite,
 )

@@ -17,6 +17,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -29,7 +30,8 @@ import com.swordhealth.catsapp.R
 @Composable
 fun CatsListScreen(innerPadding: PaddingValues) {
     val viewModel: CatsListViewModel = viewModel()
-    val cats = viewModel.catsState.value
+    val cats = viewModel.catsState.collectAsState().value
+
     LazyVerticalGrid(
         columns = GridCells.Fixed(3),
         modifier = Modifier
@@ -37,13 +39,19 @@ fun CatsListScreen(innerPadding: PaddingValues) {
             .padding(innerPadding),
     ) {
         items(cats) { cat ->
-            CatBreed(cat)
+            CatBreed(cat) {
+                if (cat.isFavourite) {
+                    viewModel.removeCatFromFavorite(cat)
+                } else {
+                    viewModel.addCatToFavourite(cat)
+                }
+            }
         }
     }
 }
 
 @Composable
-fun CatBreed(cat: Cat) {
+fun CatBreed(cat: Cat, favouriteClickCallback: (Unit) -> Unit) {
     Column(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -71,6 +79,7 @@ fun CatBreed(cat: Cat) {
                     .size(38.dp)
                     .clickable {
                         Log.d("CatsListScreen", "favourites clicked")
+                        favouriteClickCallback.invoke(Unit)
                     }
             )
         }

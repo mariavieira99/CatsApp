@@ -52,4 +52,22 @@ class CatsWebService {
             emptyList()
         }
     }
+
+    suspend fun addFavouriteCat(imageId: String): AddFavouriteCatResponse? {
+        return try {
+            api.addCatToFavourite(AddFavouriteCatRequest(imageId))
+        } catch (e: Exception) {
+            Log.d(TAG, "addFavouriteCat | Exception caught=$e")
+            null
+        }
+    }
+
+    suspend fun removeCatFromFavourite(id: Int): RemoveFavouriteCatResponse? {
+        return try {
+            api.removeCatFromFavourite(id)
+        } catch (e: Exception) {
+            Log.d(TAG, "removeCatFromFavourite | Exception caught=$e")
+            null
+        }
+    }
 }
