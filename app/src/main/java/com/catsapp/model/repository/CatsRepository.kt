@@ -2,6 +2,7 @@ package com.catsapp.model.repository
 
 import android.content.Context
 import android.util.Log
+import androidx.room.concurrent.AtomicBoolean
 import com.catsapp.model.Cat
 import com.catsapp.model.api.AddFavouriteCatResponse
 import com.catsapp.model.api.CatsWebService
@@ -21,9 +22,18 @@ class CatsRepository(
     private val webService: CatsWebService = CatsWebService()
 ) {
 
+    private var isRequestInProgress = AtomicBoolean(false)
+
     // region API
 
-    suspend fun fetchCatsFromApi(): List<Cat> = withContext(Dispatchers.IO) {
+    suspend fun fetchCatsFromApi(): List<Cat>? = withContext(Dispatchers.IO) {
+        if (isRequestInProgress.get()) {
+            Log.d(TAG, "Request already in progress!")
+            return@withContext null
+        }
+
+        isRequestInProgress.set(true)
+
         try {
             val allCatsDeferred = async { webService.getCats() }
             val favouriteCatsDeferred = async { webService.getFavouriteCats() }
@@ -46,6 +56,8 @@ class CatsRepository(
         } catch (e: Exception) {
             Log.d(TAG, "fetchCatsFromApi | caught exception=$e")
             emptyList()
+        } finally {
+            isRequestInProgress.set(false)
         }
     }
 

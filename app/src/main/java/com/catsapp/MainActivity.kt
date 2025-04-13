@@ -28,16 +28,25 @@ import androidx.navigation.compose.rememberNavController
 import com.catsapp.ui.cats.CatsListScreen
 import com.catsapp.ui.favourites.FavouritesListScreen
 import com.catsapp.ui.theme.CatsAppTheme
+import com.catsapp.utils.NetworkConnectivityProvider
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        NetworkConnectivityProvider.init(this)
+        NetworkConnectivityProvider.registerCallback()
+
         enableEdgeToEdge()
         setContent {
             CatsAppTheme {
                 CatsApp()
             }
         }
+    }
+
+    override fun onDestroy() {
+        NetworkConnectivityProvider.unregisterCallback()
+        super.onDestroy()
     }
 }
 

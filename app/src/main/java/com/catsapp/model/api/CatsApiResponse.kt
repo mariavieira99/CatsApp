@@ -8,6 +8,7 @@ data class CatResponse(
     @SerializedName("origin") val origin: String,
     @SerializedName("temperament") val temperament: String,
     @SerializedName("description") val description: String,
+    @SerializedName("life_span") val lifespan: String,
     @SerializedName("image") val image: ImageResponse?,
 )
 

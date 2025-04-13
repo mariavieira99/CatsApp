@@ -1,6 +1,7 @@
 package com.catsapp.ui.cats
 
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,6 +21,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -29,8 +31,13 @@ import com.swordhealth.catsapp.R
 
 @Composable
 fun CatsListScreen(innerPadding: PaddingValues) {
+    val context = LocalContext.current
     val viewModel: CatsListViewModel = viewModel()
     val cats = viewModel.catsState.collectAsState().value
+
+    val messageToDisplay = viewModel.messageToDisplay.collectAsState().value
+    if (messageToDisplay.isNotEmpty()) Toast.makeText(context, messageToDisplay, Toast.LENGTH_SHORT)
+        .show()
 
     LazyVerticalGrid(
         columns = GridCells.Fixed(3),
@@ -40,10 +47,16 @@ fun CatsListScreen(innerPadding: PaddingValues) {
     ) {
         items(cats) { cat ->
             CatBreed(cat) {
-                if (cat.isFavourite) {
-                    viewModel.removeCatFromFavorite(cat)
-                } else {
-                    viewModel.addCatToFavourite(cat)
+                when {
+                    !viewModel.networkStatus.value -> Toast.makeText(
+                        context,
+                        "No internet connection, try again later!",
+                        Toast.LENGTH_SHORT
+                    ).show()
+
+                    cat.isFavourite -> viewModel.removeCatFromFavorite(cat)
+
+                    else -> viewModel.addCatToFavourite(cat)
                 }
             }
         }

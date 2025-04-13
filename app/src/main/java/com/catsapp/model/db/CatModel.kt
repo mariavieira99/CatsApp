@@ -15,4 +15,5 @@ data class CatModel(
     @ColumnInfo(name = "description") val description: String,
     @ColumnInfo(name = "favouriteId") val favouriteId: Int,
     @ColumnInfo(name = "isFavourite") val isFavourite: Boolean,
+    @ColumnInfo(name = "higherLifespan") val higherLifespan: Int,
 )

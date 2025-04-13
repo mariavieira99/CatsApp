@@ -13,6 +13,7 @@ data class Cat(
     val description: String,
     val favouriteId: Int,
     val isFavourite: Boolean,
+    val higherLifespan: Int,
 )
 
 /**
@@ -28,7 +29,15 @@ fun CatResponse.mapToCat() = Cat(
     description = description,
     favouriteId = -1,
     isFavourite = false,
+    higherLifespan = getHigherLifespan(),
 )
+
+
+private fun CatResponse.getHigherLifespan(): Int {
+    val parts = lifespan.split(" - ")
+    if (parts.size != 2) return -1
+    return parts[1].toIntOrNull() ?: -1
+}
 
 /**
  * Map DB response to [Cat] data class
@@ -43,6 +52,7 @@ fun CatModel.mapToCat() = Cat(
     description = description,
     favouriteId = favouriteId,
     isFavourite = isFavourite,
+    higherLifespan = higherLifespan,
 )
 
 /**
@@ -58,4 +68,5 @@ fun Cat.mapToCatModel() = CatModel(
     description = description,
     favouriteId = favouriteId,
     isFavourite = isFavourite,
+    higherLifespan = higherLifespan,
 )
