@@ -9,10 +9,10 @@ import androidx.room.Update
 @Dao
 interface CatsDao {
     @Query("SELECT * FROM cats_data_table")
-    fun getAllCats(): List<CatModel>
+    suspend fun getAllCats(): List<CatModel>
 
     @Query("SELECT * FROM cats_data_table WHERE isFavourite = 1")
-    fun getFavouriteCats(): List<CatModel>
+    suspend fun getFavouriteCats(): List<CatModel>
 
     @Update
     suspend fun updateCat(cat: CatModel)
@@ -22,4 +22,7 @@ interface CatsDao {
 
     @Query("DELETE FROM cats_data_table")
     suspend fun deleteAllCats()
+
+    @Query("SELECT * FROM cats_data_table WHERE id = :id")
+    suspend fun getCatById(id: String): CatModel?
 }

@@ -4,29 +4,37 @@ import android.content.Context
 import android.util.Log
 import androidx.room.concurrent.AtomicBoolean
 import com.catsapp.model.Cat
-import com.catsapp.model.api.AddFavouriteCatResponse
 import com.catsapp.model.api.CatsWebService
 import com.catsapp.model.db.CatModel
 import com.catsapp.model.db.CatsDao
 import com.catsapp.model.db.CatsDatabase
 import com.catsapp.model.mapToCat
 import com.catsapp.model.mapToCatModel
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.withContext
 
 private const val TAG = "CatsRepository"
 
 class CatsRepository(
     private val dao: CatsDao,
-    private val webService: CatsWebService = CatsWebService()
+    private val webService: CatsWebService = CatsWebService(),
+    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) {
-
     private var isRequestInProgress = AtomicBoolean(false)
+
+    private val _catUpdated = MutableStateFlow<Cat?>(null)
+    val catUpdated: StateFlow<Cat?> = _catUpdated
+
+    private val _finishCatsLoad = MutableStateFlow<Unit?>(null)
+    val finishCatsLoad: StateFlow<Unit?> = _finishCatsLoad
 
     // region API
 
-    suspend fun fetchCatsFromApi(): List<Cat>? = withContext(Dispatchers.IO) {
+    suspend fun fetchCatsFromApi(): List<Cat>? = withContext(ioDispatcher) {
         if (isRequestInProgress.get()) {
             Log.d(TAG, "Request already in progress!")
             return@withContext null
@@ -61,40 +69,48 @@ class CatsRepository(
         }
     }
 
-    suspend fun addCatToFavorite(cat: Cat): AddFavouriteCatResponse? {
-        val response = webService.addFavouriteCat(cat.imageId) ?: return null
+    suspend fun addCatToFavorite(cat: Cat) = withContext(ioDispatcher) {
+        val response = webService.addFavouriteCat(cat.imageId) ?: return@withContext null
         Log.d("addCatToFavorite", "response=$response")
-        return response
+        response
     }
 
-    suspend fun removeCatFromFavourite(cat: Cat): Boolean {
-        val response = webService.removeCatFromFavourite(cat.favouriteId) ?: return false
+    suspend fun removeCatFromFavourite(cat: Cat) = withContext(ioDispatcher) {
+        val response =
+            webService.removeCatFromFavourite(cat.favouriteId) ?: return@withContext false
         Log.d("removeCatFromFavourite", "response=$response")
-        return response.message == "SUCCESS"
+        response.message == "SUCCESS"
     }
 
     // endregion
 
     // region DB
 
-    fun getCatsFromDb(): List<Cat> {
+    suspend fun getCatsFromDb() = withContext(ioDispatcher) {
         val cats = dao.getAllCats()
-        return cats.map { it.mapToCat() }
+        cats.map { it.mapToCat() }
     }
 
-    fun getFavouriteCatsFromDb(): List<Cat> {
+    suspend fun getFavouriteCatsFromDb() = withContext(ioDispatcher) {
         val favouriteCats = dao.getFavouriteCats()
-        return favouriteCats.map { it.mapToCat() }
+        favouriteCats.map { it.mapToCat() }
     }
 
-    suspend fun saveCatsToDb(cats: List<CatModel>) {
+    suspend fun saveCatsToDb(cats: List<CatModel>) = withContext(ioDispatcher) {
         dao.deleteAllCats()
         dao.insertCats(cats)
+        _finishCatsLoad.value = Unit
     }
 
-    suspend fun updateUser(cat: Cat) {
-        Log.d(TAG, "updateUser | cat=$cat")
+    suspend fun updateCat(cat: Cat) = withContext(ioDispatcher) {
+        Log.d(TAG, "updateCat | cat=$cat")
         dao.updateCat(cat.mapToCatModel())
+        _catUpdated.value = cat
+    }
+
+    suspend fun getCat(id: String) = withContext(ioDispatcher) {
+        val cat = dao.getCatById(id) ?: return@withContext null
+        cat.mapToCat()
     }
 
     // endregion

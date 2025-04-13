@@ -1,4 +1,4 @@
-package com.catsapp.ui.favourites
+package com.catsapp.ui.detailcat
 
 import android.app.Application
 import android.util.Log
@@ -7,7 +7,6 @@ import androidx.lifecycle.viewModelScope
 import com.catsapp.model.Cat
 import com.catsapp.model.repository.CatsRepository
 import com.catsapp.utils.NetworkConnectivityProvider
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -15,29 +14,27 @@ import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-private const val TAG = "FavouritesViewModel"
+private const val TAG = "DetailViewModel"
 
-class FavouritesViewModel(application: Application) : AndroidViewModel(application) {
+class DetailViewModel(
+    application: Application,
+) : AndroidViewModel(application) {
     private val repository: CatsRepository = CatsRepository.getInstance(application)
-
-    private val _favouritesCatsState = MutableStateFlow<List<Cat>>(emptyList())
-    val favouritesCatsState: StateFlow<List<Cat>> = _favouritesCatsState
-
-    private val _messageToDisplay = MutableStateFlow("")
-    val messageToDisplay: StateFlow<String> = _messageToDisplay
 
     val networkStatus: StateFlow<Boolean> =
         NetworkConnectivityProvider.isConnected.stateIn(
             viewModelScope,
             SharingStarted.Lazily,
-            false
+            true
         )
 
-    init {
-        viewModelScope.launch(Dispatchers.Default) {
-            _favouritesCatsState.value = loadCatsData()
-        }
+    private val _catState = MutableStateFlow<Cat?>(null)
+    val catState: StateFlow<Cat?> = _catState
 
+    private val _messageToDisplay = MutableStateFlow("")
+    val messageToDisplay: StateFlow<String> = _messageToDisplay
+
+    init {
         viewModelScope.launch {
             networkStatus
                 .drop(1)
@@ -46,39 +43,40 @@ class FavouritesViewModel(application: Application) : AndroidViewModel(applicati
                 }
         }
 
+
         viewModelScope.launch {
             repository.catUpdated.collect { cat ->
-                Log.d(TAG, "favouritesCatsState= ${favouritesCatsState.value}")
                 Log.d(TAG, "cat updated = $cat")
                 if (cat == null) return@collect
 
-                val currentFavourites = _favouritesCatsState.value.toMutableList()
-                if (!cat.isFavourite) {
-                    currentFavourites.removeIf { it.id == cat.id }
-                } else {
-                    currentFavourites.add(cat)
-                }
-
-                _favouritesCatsState.value = currentFavourites
-            }
-        }
-
-        viewModelScope.launch {
-            repository.finishCatsLoad.collect {
-                if (it == null) return@collect
-                Log.d(TAG, "finishApiCatsLoad")
-                _favouritesCatsState.value = loadCatsData()
+                _catState.value = cat
             }
         }
     }
 
-    private suspend fun loadCatsData(): List<Cat> {
-        Log.d(TAG, "loadCatsData | fetch from database")
-        return repository.getFavouriteCatsFromDb()
+    fun getCatById(id: String) {
+        viewModelScope.launch {
+            _catState.value = repository.getCat(id)
+        }
+    }
+
+    fun addCatToFavourite(cat: Cat) {
+        viewModelScope.launch {
+            Log.d(TAG, "addCatToFavourite | cat=$cat")
+            val response = repository.addCatToFavorite(cat) ?: run {
+                Log.d(TAG, "addCatToFavourite | failed network request")
+                setDisplayMessage("[ERROR] ${cat.breedName} was not added to favourites. Try again later!")
+                return@launch
+            }
+
+            repository.updateCat(cat.copy(favouriteId = response.id, isFavourite = true))
+            setDisplayMessage("${cat.breedName} was added to favourites!")
+        }
     }
 
     fun removeCatFromFavorite(cat: Cat) {
         viewModelScope.launch {
+            Log.d(TAG, "removeCatFromFavorite | cat=$cat")
             val success = repository.removeCatFromFavourite(cat)
             if (success) {
                 repository.updateCat(cat.copy(favouriteId = -1, isFavourite = false))

@@ -8,7 +8,6 @@ import com.catsapp.model.Cat
 import com.catsapp.model.mapToCatModel
 import com.catsapp.model.repository.CatsRepository
 import com.catsapp.utils.NetworkConnectivityProvider
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -37,6 +36,11 @@ class CatsListViewModel(application: Application) : AndroidViewModel(application
 
     init {
         viewModelScope.launch {
+            val cats = loadCatsData()
+            if (cats != null) _catsState.value = cats
+        }
+
+        viewModelScope.launch {
             networkStatus
                 .drop(1)
                 .collect { status ->
@@ -48,9 +52,13 @@ class CatsListViewModel(application: Application) : AndroidViewModel(application
                 }
         }
 
-        viewModelScope.launch(Dispatchers.IO) {
-            val cats = loadCatsData()
-            if (cats != null) _catsState.value = cats
+        viewModelScope.launch {
+            repository.catUpdated.collect { cat ->
+                Log.d(TAG, "cat updated = $cat")
+                if (cat == null) return@collect
+
+                _catsState.value = _catsState.value.map { if (it.id == cat.id) cat else it }
+            }
         }
     }
 
@@ -72,46 +80,34 @@ class CatsListViewModel(application: Application) : AndroidViewModel(application
     }
 
     fun addCatToFavourite(cat: Cat) {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch {
             Log.d(TAG, "addCatToFavourite | cat=$cat")
             val response = repository.addCatToFavorite(cat) ?: run {
-                Log.d(TAG, "addCatToFavourite | failed network request")
-                _messageToDisplay.value =
-                    "[ERROR] ${cat.breedName} was not added to favourites. Try again later!"
+                Log.d(TAG, "addCatToFavourite | network request failed")
+                setDisplayMessage("[ERROR] ${cat.breedName} was not added to favourites. Try again later!")
                 return@launch
             }
 
-            repository.updateUser(cat.copy(favouriteId = response.id, isFavourite = true))
-            _catsState.value = _catsState.value.map {
-                if (it.imageId == cat.imageId) {
-                    it.copy(favouriteId = response.id, isFavourite = true)
-                } else {
-                    it
-                }
-            }
-            _messageToDisplay.value = "${cat.breedName} added to favourites!"
+            repository.updateCat(cat.copy(favouriteId = response.id, isFavourite = true))
+            setDisplayMessage("${cat.breedName} added to favourites!")
         }
     }
 
     fun removeCatFromFavorite(cat: Cat) {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch {
             Log.d(TAG, "removeCatFromFavorite | cat=$cat")
             val success = repository.removeCatFromFavourite(cat)
-            Log.d(TAG, "removeCatFromFavorite | success=$success")
             if (success) {
-                repository.updateUser(cat.copy(favouriteId = -1, isFavourite = false))
-                _catsState.value = _catsState.value.map {
-                    if (it.imageId == cat.imageId) {
-                        it.copy(favouriteId = -1, isFavourite = false)
-                    } else {
-                        it
-                    }
-                }
-                _messageToDisplay.value = "${cat.breedName} removed from favourites!"
+                repository.updateCat(cat.copy(favouriteId = -1, isFavourite = false))
+                setDisplayMessage("${cat.breedName} removed from favourites!")
             } else {
-                _messageToDisplay.value =
-                    "[ERROR] ${cat.breedName} was not removed from favourites. Try again later!"
+                setDisplayMessage("[ERROR] ${cat.breedName} was not removed from favourites. Try again later!")
+
             }
         }
+    }
+
+    fun setDisplayMessage(message: String = "") {
+        _messageToDisplay.value = message
     }
 }
