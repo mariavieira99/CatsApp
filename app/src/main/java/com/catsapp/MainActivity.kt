@@ -18,9 +18,13 @@ import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -70,6 +74,8 @@ private fun CatsApp() {
 
     val allCatsGridState = rememberLazyGridState()
     val favouriteCatsGridState = rememberLazyGridState()
+    var query by remember { mutableStateOf("") }
+
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         bottomBar = {
@@ -82,12 +88,24 @@ private fun CatsApp() {
     ) { innerPadding ->
         NavHost(navController = navController, startDestination = "cats_list") {
             composable(route = "cats_list") {
-                CatsListScreen(innerPadding, catsListViewModel, allCatsGridState) {
+                CatsListScreen(
+                    innerPadding = innerPadding,
+                    viewModel = catsListViewModel,
+                    gridState = allCatsGridState,
+                    query = query,
+                    queryChangeCallback = {
+                        query = it
+                    },
+                ) {
                     navController.navigate("cat_details/$it")
                 }
             }
             composable(route = "favourites_list") {
-                FavouritesListScreen(innerPadding, favouritesViewModel, favouriteCatsGridState) {
+                FavouritesListScreen(
+                    innerPadding = innerPadding,
+                    viewModel = favouritesViewModel,
+                    gridState = favouriteCatsGridState,
+                ) {
                     navController.navigate("cat_details/$it")
                 }
             }

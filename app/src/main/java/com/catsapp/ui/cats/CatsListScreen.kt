@@ -22,6 +22,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
@@ -41,7 +42,9 @@ fun CatsListScreen(
     innerPadding: PaddingValues,
     viewModel: CatsListViewModel,
     gridState: LazyGridState,
-    navigationCallback: (String) -> Unit
+    query: String,
+    queryChangeCallback: (String) -> Unit,
+    navigationCallback: (String) -> Unit,
 ) {
     val context = LocalContext.current
     val cats = viewModel.catsState.collectAsState().value
@@ -52,24 +55,42 @@ fun CatsListScreen(
         viewModel.setDisplayMessage()
     }
 
+    val filteredItems = cats.filter {
+        it.breedName.contains(query, ignoreCase = true)
+    }
+
     Column(
         Modifier
             .fillMaxSize()
             .background(color = PurpleGrey80)
     ) {
-        Text(
-            text = "Search Bar Placeholder",
+        TextField(
+            value = query,
+            onValueChange = { queryChangeCallback.invoke(it) },
+            label = { Text("Search by breed name") },
+            trailingIcon = {
+                val painter =
+                    if (query.isEmpty()) R.drawable.baseline_search_24 else R.drawable.baseline_clear_24
+                Icon(
+                    painter = painterResource(painter),
+                    contentDescription = null,
+                    modifier = Modifier.clickable {
+                        if (query.isNotEmpty()) queryChangeCallback.invoke("")
+                    }
+                )
+            },
             modifier = Modifier
+                .fillMaxWidth(0.85f)
                 .padding(top = 50.dp)
                 .align(Alignment.CenterHorizontally),
-            style = MaterialTheme.typography.titleLarge
         )
+
         LazyVerticalGrid(
             columns = GridCells.Fixed(2),
             state = gridState,
             modifier = Modifier.padding(innerPadding),
         ) {
-            items(cats) { cat ->
+            items(filteredItems) { cat ->
                 CatBreed(cat = cat, navigationCallback = navigationCallback) {
                     when {
                         !viewModel.networkStatus.value -> Toast.makeText(
