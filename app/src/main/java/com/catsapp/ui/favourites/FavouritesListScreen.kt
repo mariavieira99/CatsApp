@@ -18,7 +18,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import com.catsapp.model.Cat
 import com.catsapp.ui.cats.CatBreed
 import com.catsapp.ui.theme.PurpleGrey80
 
@@ -32,7 +31,7 @@ fun FavouritesListScreen(
     val context = LocalContext.current
     val cats = viewModel.favouritesCatsState.collectAsState().value
     val messageToDisplay = viewModel.messageToDisplay.collectAsState().value
-    val average = calculateAverage(cats)
+    val lifespanAverage = viewModel.lifespanAverage.collectAsState().value
 
     if (messageToDisplay.isNotEmpty()) {
         Toast.makeText(context, messageToDisplay, Toast.LENGTH_SHORT).show()
@@ -54,9 +53,9 @@ fun FavouritesListScreen(
             )
         }
 
-        if (average != null) {
+        if (lifespanAverage != null) {
             Text(
-                text = "Average higher-lifespan: $average years",
+                text = "Average higher-lifespan: $lifespanAverage years",
                 modifier = Modifier
                     .padding(top = 30.dp)
                     .align(Alignment.CenterHorizontally),
@@ -86,12 +85,4 @@ fun FavouritesListScreen(
             }
         }
     }
-}
-
-private fun calculateAverage(cats: List<Cat>): String? {
-    val catsLifeSpan = cats.mapNotNull { cat -> cat.higherLifespan.takeIf { it != -1 && it != 0 } }
-    if (catsLifeSpan.isEmpty()) return null
-
-    val average = catsLifeSpan.average()
-    return "%.1f".format(average)
 }

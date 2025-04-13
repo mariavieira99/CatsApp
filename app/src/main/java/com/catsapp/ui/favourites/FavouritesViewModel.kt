@@ -26,6 +26,9 @@ class FavouritesViewModel(application: Application) : AndroidViewModel(applicati
     private val _messageToDisplay = MutableStateFlow("")
     val messageToDisplay: StateFlow<String> = _messageToDisplay
 
+    private val _lifespanAverage = MutableStateFlow<String?>(null)
+    val lifespanAverage: StateFlow<String?> = _lifespanAverage
+
     val networkStatus: StateFlow<Boolean> =
         NetworkConnectivityProvider.isConnected.stateIn(
             viewModelScope,
@@ -36,6 +39,7 @@ class FavouritesViewModel(application: Application) : AndroidViewModel(applicati
     init {
         viewModelScope.launch(Dispatchers.Default) {
             _favouritesCatsState.value = loadCatsData()
+            _lifespanAverage.value = calculateAverage()
         }
         
         setupCollectors()
@@ -64,6 +68,7 @@ class FavouritesViewModel(application: Application) : AndroidViewModel(applicati
                 }
 
                 _favouritesCatsState.value = currentFavourites
+                _lifespanAverage.value = calculateAverage()
             }
         }
 
@@ -71,6 +76,7 @@ class FavouritesViewModel(application: Application) : AndroidViewModel(applicati
             repository.finishCatsLoad.collect {
                 Log.d(TAG, "finishApiCatsLoad")
                 _favouritesCatsState.value = loadCatsData()
+                _lifespanAverage.value = calculateAverage()
             }
         }
     }
@@ -78,6 +84,15 @@ class FavouritesViewModel(application: Application) : AndroidViewModel(applicati
     private suspend fun loadCatsData(): List<Cat> {
         Log.d(TAG, "loadCatsData | fetch from database")
         return repository.getFavouriteCatsFromDb()
+    }
+
+    private fun calculateAverage(): String? {
+        val catsLifeSpan =
+            _favouritesCatsState.value.mapNotNull { cat -> cat.higherLifespan.takeIf { it != -1 && it != 0 } }
+        if (catsLifeSpan.isEmpty()) return null
+
+        val average = catsLifeSpan.average()
+        return "%.1f".format(average)
     }
 
     fun removeCatFromFavorite(cat: Cat) {
