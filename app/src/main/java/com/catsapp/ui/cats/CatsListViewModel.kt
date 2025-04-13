@@ -40,6 +40,10 @@ class CatsListViewModel(application: Application) : AndroidViewModel(application
             if (cats != null) _catsState.value = cats
         }
 
+        setupCollectors()
+    }
+
+    private fun setupCollectors() {
         viewModelScope.launch {
             networkStatus
                 .drop(1)
@@ -58,6 +62,15 @@ class CatsListViewModel(application: Application) : AndroidViewModel(application
                 if (cat == null) return@collect
 
                 _catsState.value = _catsState.value.map { if (it.id == cat.id) cat else it }
+            }
+        }
+
+        viewModelScope.launch {
+            repository.finishCatsLoad.collect { isFromPeriodicUpdates ->
+                if (isFromPeriodicUpdates) {
+                    Log.d(TAG, "finishApiCatsLoad")
+                    _catsState.value = repository.getCatsFromDb()
+                }
             }
         }
     }

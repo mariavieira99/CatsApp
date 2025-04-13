@@ -37,7 +37,11 @@ class FavouritesViewModel(application: Application) : AndroidViewModel(applicati
         viewModelScope.launch(Dispatchers.Default) {
             _favouritesCatsState.value = loadCatsData()
         }
+        
+        setupCollectors()
+    }
 
+    private fun setupCollectors() {
         viewModelScope.launch {
             networkStatus
                 .drop(1)
@@ -65,7 +69,6 @@ class FavouritesViewModel(application: Application) : AndroidViewModel(applicati
 
         viewModelScope.launch {
             repository.finishCatsLoad.collect {
-                if (it == null) return@collect
                 Log.d(TAG, "finishApiCatsLoad")
                 _favouritesCatsState.value = loadCatsData()
             }

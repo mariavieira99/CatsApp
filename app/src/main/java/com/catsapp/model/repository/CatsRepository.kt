@@ -13,8 +13,12 @@ import com.catsapp.model.mapToCatModel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.withContext
 
 private const val TAG = "CatsRepository"
@@ -29,8 +33,11 @@ class CatsRepository(
     private val _catUpdated = MutableStateFlow<Cat?>(null)
     val catUpdated: StateFlow<Cat?> = _catUpdated
 
-    private val _finishCatsLoad = MutableStateFlow<Unit?>(null)
-    val finishCatsLoad: StateFlow<Unit?> = _finishCatsLoad
+    private val _finishCatsLoad = MutableSharedFlow<Boolean>(
+        extraBufferCapacity = 1,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST
+    )
+    val finishCatsLoad: SharedFlow<Boolean> = _finishCatsLoad.asSharedFlow()
 
     // region API
 
@@ -96,10 +103,11 @@ class CatsRepository(
         favouriteCats.map { it.mapToCat() }
     }
 
-    suspend fun saveCatsToDb(cats: List<CatModel>) = withContext(ioDispatcher) {
-        dao.deleteAllCats()
-        dao.insertCats(cats)
-        _finishCatsLoad.value = Unit
+    suspend fun saveCatsToDb(cats: List<CatModel>, isFromPeriodicUpdate: Boolean = false) =
+        withContext(ioDispatcher) {
+            dao.deleteAllCats()
+            dao.insertCats(cats)
+            _finishCatsLoad.emit(isFromPeriodicUpdate)
     }
 
     suspend fun updateCat(cat: Cat) = withContext(ioDispatcher) {

@@ -35,6 +35,10 @@ class DetailViewModel(
     val messageToDisplay: StateFlow<String> = _messageToDisplay
 
     init {
+        setupCollectors()
+    }
+
+    private fun setupCollectors() {
         viewModelScope.launch {
             networkStatus
                 .drop(1)
