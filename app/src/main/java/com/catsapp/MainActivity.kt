@@ -74,8 +74,8 @@ class MainActivity : ComponentActivity() {
 @Composable
 private fun CatsApp() {
     val navController = rememberNavController()
-    val catsListViewModel: CatsListViewModel = viewModel()
-    val favouritesViewModel: FavouritesViewModel = viewModel()
+    val catsListViewModel: CatsListViewModel = viewModel(factory = CatsListViewModel.Factory)
+    val favouritesViewModel: FavouritesViewModel = viewModel(factory = FavouritesViewModel.Factory)
 
     val allCatsGridState = rememberLazyGridState()
     val favouriteCatsGridState = rememberLazyGridState()
@@ -122,7 +122,7 @@ private fun CatsApp() {
                 })
             ) { navBackStack ->
                 val getCatId = navBackStack.arguments?.getString("catId") ?: return@composable
-                val viewModel: DetailViewModel = viewModel()
+                val viewModel: DetailViewModel = viewModel(factory = DetailViewModel.Factory)
                 viewModel.getCatById(getCatId)
 
                 DetailCatScreen(innerPadding, viewModel) {

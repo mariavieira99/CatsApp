@@ -15,6 +15,8 @@ lifecycleViewModelCompose = "2.8.7"
 navigationComposeVersion = "2.8.9"
 roomVersion = "2.7.0"
 kspVersion = "2.0.21-1.0.27"
+coroutinesVersion = "1.10.1"
+mockkVersion = "1.13.17"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -41,6 +43,8 @@ androidx-navigation-navigation-compose = { group = "androidx.navigation", name =
 androidx-room = { group = "androidx.room", name = "room-ktx", version.ref = "roomVersion" }
 androidx-room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "roomVersion" }
 androidx-room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "roomVersion" }
+kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "coroutinesVersion" }
+io-mockk = { group = "io.mockk", name = "mockk", version.ref = "mockkVersion" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

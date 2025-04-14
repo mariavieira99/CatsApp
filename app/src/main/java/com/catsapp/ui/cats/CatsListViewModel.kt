@@ -2,8 +2,11 @@ package com.catsapp.ui.cats
 
 import android.app.Application
 import android.util.Log
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
 import com.catsapp.model.Cat
 import com.catsapp.model.mapToCatModel
 import com.catsapp.model.repository.CatsRepository
@@ -17,9 +20,7 @@ import kotlinx.coroutines.launch
 
 private const val TAG = "CatsListViewModel"
 
-class CatsListViewModel(application: Application) : AndroidViewModel(application) {
-
-    private val repository: CatsRepository = CatsRepository.getInstance(application)
+class CatsListViewModel(private val repository: CatsRepository) : ViewModel() {
 
     val networkStatus: StateFlow<Boolean> =
         NetworkConnectivityProvider.isConnected.stateIn(
@@ -122,5 +123,18 @@ class CatsListViewModel(application: Application) : AndroidViewModel(application
 
     fun setDisplayMessage(message: String = "") {
         _messageToDisplay.value = message
+    }
+
+    companion object {
+
+        /**
+         * Factory for creating instances of [CatsListViewModel].
+         */
+        val Factory = viewModelFactory {
+            initializer {
+                val application = this[APPLICATION_KEY] as Application
+                CatsListViewModel(CatsRepository.getInstance(application.applicationContext))
+            }
+        }
     }
 }

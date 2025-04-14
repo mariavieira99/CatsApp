@@ -2,10 +2,16 @@ package com.catsapp.ui.favourites
 
 import android.app.Application
 import android.util.Log
+import androidx.annotation.VisibleForTesting
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
 import com.catsapp.model.Cat
 import com.catsapp.model.repository.CatsRepository
+import com.catsapp.ui.cats.CatsListViewModel
 import com.catsapp.utils.NetworkConnectivityProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,9 +23,7 @@ import kotlinx.coroutines.launch
 
 private const val TAG = "FavouritesViewModel"
 
-class FavouritesViewModel(application: Application) : AndroidViewModel(application) {
-    private val repository: CatsRepository = CatsRepository.getInstance(application)
-
+class FavouritesViewModel(private val repository: CatsRepository) : ViewModel() {
     private val _favouritesCatsState = MutableStateFlow<List<Cat>>(emptyList())
     val favouritesCatsState: StateFlow<List<Cat>> = _favouritesCatsState
 
@@ -86,7 +90,8 @@ class FavouritesViewModel(application: Application) : AndroidViewModel(applicati
         return repository.getFavouriteCatsFromDb()
     }
 
-    private fun calculateAverage(): String? {
+    @VisibleForTesting
+    fun calculateAverage(): String? {
         val catsLifeSpan =
             _favouritesCatsState.value.mapNotNull { cat -> cat.higherLifespan.takeIf { it != -1 && it != 0 } }
         if (catsLifeSpan.isEmpty()) return null
@@ -109,5 +114,18 @@ class FavouritesViewModel(application: Application) : AndroidViewModel(applicati
 
     fun setDisplayMessage(message: String = "") {
         _messageToDisplay.value = message
+    }
+
+    companion object {
+
+        /**
+         * Factory for creating instances of [FavouritesViewModel].
+         */
+        val Factory = viewModelFactory {
+            initializer {
+                val application = this[APPLICATION_KEY] as Application
+                FavouritesViewModel(CatsRepository.getInstance(application.applicationContext))
+            }
+        }
     }
 }
