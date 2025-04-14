@@ -174,15 +174,26 @@ private fun BottomNavigationBar(
             NavigationBarItem(
                 selected = navigationIndex.intValue == index,
                 onClick = {
-                    val listState = when {
-                        navigationIndex.intValue == 0 && index == 0 -> allCatsGridState
-                        navigationIndex.intValue == 1 && index == 1 -> favouriteCatsGridState
-                        else -> null
+                    val (listState, isSameScreen) = when {
+                        navigationIndex.intValue == 0 && index == 0 -> Pair(
+                            allCatsGridState,
+                            currentRoute == Screen.CATS_LIST.route
+                        )
+
+                        navigationIndex.intValue == 1 && index == 1 -> Pair(
+                            favouriteCatsGridState,
+                            currentRoute == Screen.FAVOURITES_LIST.route
+                        )
+
+                        else -> Pair(null, false)
                     }
                     navigationIndex.intValue = index
 
-                    if (listState != null) coroutineScope.launch { listState.animateScrollToItem(0) }
-                    else navController.navigate(item.route)
+                    if (listState != null && isSameScreen) {
+                        coroutineScope.launch { listState.animateScrollToItem(0) }
+                    } else {
+                        navController.navigate(item.route)
+                    }
                 },
                 icon = {
                     Icon(imageVector = item.icon, contentDescription = item.title)
