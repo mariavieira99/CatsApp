@@ -30,10 +30,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.catsapp.model.Cat
+import com.catsapp.ui.theme.Purple40
 import com.catsapp.ui.theme.PurpleGrey80
 import com.swordhealth.catsapp.R
 
@@ -59,6 +64,9 @@ fun CatsListScreen(
         it.breedName.contains(query, ignoreCase = true)
     }
 
+    val searchIcon =
+        if (query.isEmpty()) R.drawable.baseline_search_24 else R.drawable.baseline_clear_24
+
     Column(
         Modifier
             .fillMaxSize()
@@ -67,12 +75,10 @@ fun CatsListScreen(
         TextField(
             value = query,
             onValueChange = { queryChangeCallback.invoke(it) },
-            label = { Text("Search by breed name") },
+            label = { Text(text = stringResource(id = R.string.search_placeholder)) },
             trailingIcon = {
-                val painter =
-                    if (query.isEmpty()) R.drawable.baseline_search_24 else R.drawable.baseline_clear_24
                 Icon(
-                    painter = painterResource(painter),
+                    painter = painterResource(searchIcon),
                     contentDescription = null,
                     modifier = Modifier.clickable {
                         if (query.isNotEmpty()) queryChangeCallback.invoke("")
@@ -112,16 +118,22 @@ fun CatsListScreen(
 @Composable
 fun CatBreed(
     cat: Cat,
-    navigationCallback: (String) -> Unit,
-    favouriteClickCallback: (Unit) -> Unit
+    navigationCallback: ((String) -> Unit)? = null,
+    favouriteClickCallback: (() -> Unit)? = null,
 ) {
+    val (painter, contentDescription) = if (cat.isFavourite) {
+        painterResource(R.drawable.baseline_star_24) to stringResource(R.string.remove_from_favourites_content_description)
+    } else {
+        painterResource(R.drawable.baseline_star_outline_24) to stringResource(R.string.add_to_favourites_content_description)
+    }
+
     Card(
         elevation = CardDefaults.elevatedCardElevation(10.dp),
         modifier = Modifier
             .padding(8.dp)
             .fillMaxWidth()
             .clickable(onClick = {
-                navigationCallback(cat.id)
+                navigationCallback?.invoke(cat.id)
             })
     ) {
         Column(
@@ -135,16 +147,15 @@ fun CatBreed(
             ) {
                 AsyncImage(
                     model = cat.imageUrl,
-                    contentDescription = null,
+                    contentDescription = stringResource(R.string.cat_image_list_content_description),
                     modifier = Modifier
                         .align(Alignment.Center)
                         .aspectRatio(1f)
                 )
 
                 Icon(
-                    painter = if (cat.isFavourite) painterResource(R.drawable.baseline_star_24)
-                    else painterResource(R.drawable.baseline_star_outline_24),
-                    contentDescription = null,
+                    painter = painter,
+                    contentDescription = contentDescription,
                     modifier = Modifier
                         .align(Alignment.TopEnd)
                         .size(30.dp)
@@ -155,15 +166,18 @@ fun CatBreed(
                             spotColor = Color.White,
                         )
                         .clickable {
-                            favouriteClickCallback.invoke(Unit)
-                        }
+                            favouriteClickCallback?.invoke()
+                        },
+                    tint = Purple40,
                 )
             }
 
             Text(
                 text = cat.breedName,
-                modifier = Modifier.padding(16.dp),
-                style = MaterialTheme.typography.labelLarge
+                modifier = Modifier
+                    .semantics { this.contentDescription = cat.breedName }
+                    .padding(bottom = 16.dp),
+                style = MaterialTheme.typography.titleMedium,
             )
         }
     }

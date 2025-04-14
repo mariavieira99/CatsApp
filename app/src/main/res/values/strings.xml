@@ -1,3 +1,14 @@
 <resources>
     <string name="app_name">CatsApp</string>
+    <string name="search_placeholder">Search by breed name</string>
+    <string name="cat_image_list_content_description">Cat Image on list</string>
+    <string name="cat_image_detail_content_description">Cat Image on Detail Screen</string>
+    <string name="remove_from_favourites_content_description">Remove from favourites</string>
+    <string name="add_to_favourites_content_description">Add to favourites</string>
+    <string name="no_favourite_cats_message">No favourite cats. Go to Cats List to choose your favourites.</string>
+    <string name="average_lifespan">Average higher-lifespan: %1$s years</string>
+    <string name="origin">Origin</string>
+    <string name="temperament">Temperament</string>
+    <string name="description">Description</string>
+    <string name="back_item">Back item</string>
 </resources>

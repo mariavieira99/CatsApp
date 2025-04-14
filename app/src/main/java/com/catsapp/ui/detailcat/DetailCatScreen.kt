@@ -1,6 +1,5 @@
 package com.catsapp.ui.detailcat
 
-import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -33,8 +32,10 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
+import com.catsapp.model.Cat
 import com.catsapp.ui.theme.PurpleGrey80
 import com.swordhealth.catsapp.R
 
@@ -52,76 +53,96 @@ fun DetailCatScreen(
         Toast.makeText(context, messageToDisplay, Toast.LENGTH_SHORT).show()
         viewModel.setDisplayMessage()
     }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(bottom = 100.dp)
+            .padding(top = innerPadding.calculateTopPadding(), bottom = 100.dp)
             .background(color = PurpleGrey80)
             .verticalScroll(rememberScrollState())
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 20.dp, top = 25.dp, bottom = 10.dp),
-            horizontalArrangement = Arrangement.Start
-        ) {
-            Icon(
-                painter = painterResource(R.drawable.baseline_arrow_back_ios_24),
-                contentDescription = null,
-                modifier = Modifier
-                    .size(25.dp)
-                    .shadow(20.dp, shape = CircleShape, clip = true, spotColor = Color.Black)
-                    .clickable {
-                        backClickCallback()
-                    }
-            )
+        BackItem(backClickCallback)
+        CatInformation(cat) {
+            when {
+                !viewModel.networkStatus.value -> Toast.makeText(
+                    context,
+                    "No internet connection, try again later!",
+                    Toast.LENGTH_SHORT
+                ).show()
+
+                cat.isFavourite -> viewModel.removeCatFromFavorite(cat)
+
+                else -> viewModel.addCatToFavourite(cat)
+            }
         }
+    }
+}
 
-        Row(
+@Composable
+fun BackItem(backClickCallback: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 20.dp, top = 50.dp, bottom = 10.dp),
+        horizontalArrangement = Arrangement.Start
+    ) {
+        Icon(
+            painter = painterResource(R.drawable.baseline_arrow_back_ios_24),
+            contentDescription = stringResource(R.string.back_item),
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text(
-                text = cat.breedName,
-                modifier = Modifier.align(Alignment.CenterVertically),
-                style = MaterialTheme.typography.headlineSmall
-            )
+                .size(25.dp)
+                .shadow(20.dp, shape = CircleShape, clip = true, spotColor = Color.Black)
+                .clickable {
+                    backClickCallback()
+                }
+        )
+    }
+}
 
-            Icon(
-                painter = if (cat.isFavourite) painterResource(R.drawable.baseline_star_24)
-                else painterResource(R.drawable.baseline_star_outline_24),
-                contentDescription = null,
-                modifier = Modifier
-                    .align(Alignment.CenterVertically)
-                    .size(30.dp)
-                    .shadow(
-                        20.dp,
-                        shape = CircleShape,
-                        clip = true,
-                        spotColor = Color.White
-                    ) // Shadow for elevation
-                    .clickable {
-                        Log.d("DetailCatScreen", "favourites clicked")
-                        when {
-                            !viewModel.networkStatus.value -> Toast.makeText(
-                                context,
-                                "No internet connection, try again later!",
-                                Toast.LENGTH_SHORT
-                            ).show()
+@Composable
+fun CatInformation(cat: Cat, favouriteClickCallback: (() -> Unit)? = null) {
+    val (painter, contentDescription) = if (cat.isFavourite) {
+        painterResource(R.drawable.baseline_star_24) to stringResource(R.string.remove_from_favourites_content_description)
+    } else {
+        painterResource(R.drawable.baseline_star_outline_24) to stringResource(R.string.add_to_favourites_content_description)
+    }
 
-                            cat.isFavourite -> viewModel.removeCatFromFavorite(cat)
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(
+            text = cat.breedName,
+            modifier = Modifier.align(Alignment.CenterVertically),
+            style = MaterialTheme.typography.headlineSmall
+        )
 
-                            else -> viewModel.addCatToFavourite(cat)
-                        }
-                    }
-            )
-        }
+        Icon(
+            painter = painter,
+            contentDescription = contentDescription,
+            modifier = Modifier
+                .align(Alignment.CenterVertically)
+                .size(30.dp)
+                .shadow(
+                    20.dp,
+                    shape = CircleShape,
+                    clip = true,
+                    spotColor = Color.White
+                )
+                .clickable {
+                    favouriteClickCallback?.invoke()
+                }
+        )
+    }
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.Center
+    ) {
         Card(
-            modifier = Modifier
-                .align(Alignment.CenterHorizontally)
-                .padding(16.dp),
+            modifier = Modifier.padding(16.dp),
             shape = CircleShape,
             border = BorderStroke(
                 width = 2.dp,
@@ -130,20 +151,19 @@ fun DetailCatScreen(
         ) {
             AsyncImage(
                 model = cat.imageUrl,
-                contentDescription = null,
-                modifier = Modifier
-                    .size(250.dp)
+                contentDescription = stringResource(R.string.cat_image_detail_content_description),
+                modifier = Modifier.size(300.dp)
             )
         }
+    }
 
-        Column(
-            modifier = Modifier.padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            DetailItems(title = "Origin", description = cat.origin)
-            DetailItems(title = "Temperament", description = cat.temperament)
-            DetailItems(title = "Description", description = cat.description)
-        }
+    Column(
+        modifier = Modifier.padding(horizontal = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        DetailItems(title = stringResource(R.string.origin), description = cat.origin)
+        DetailItems(title = stringResource(R.string.temperament), description = cat.temperament)
+        DetailItems(title = stringResource(R.string.description), description = cat.description)
     }
 }
 
@@ -151,15 +171,15 @@ fun DetailCatScreen(
 fun DetailItems(title: String, description: String) {
     Text(
         text = title,
-        style = MaterialTheme.typography.titleMedium.copy(color = Color.DarkGray)
+        style = MaterialTheme.typography.titleMedium.copy(color = Color.DarkGray),
     )
     Card(
         modifier = Modifier
             .background(
                 MaterialTheme.colorScheme.surfaceContainerHighest,
-                shape = RoundedCornerShape(8.dp)
+                shape = RoundedCornerShape(8.dp),
             ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
     ) {
 
         Box(
@@ -173,8 +193,7 @@ fun DetailItems(title: String, description: String) {
             Text(
                 text = description,
                 style = MaterialTheme.typography.bodyMedium,
-
-                )
+            )
         }
     }
 }

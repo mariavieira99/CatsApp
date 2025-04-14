@@ -17,9 +17,11 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.catsapp.ui.cats.CatBreed
 import com.catsapp.ui.theme.PurpleGrey80
+import com.swordhealth.catsapp.R
 
 @Composable
 fun FavouritesListScreen(
@@ -45,7 +47,7 @@ fun FavouritesListScreen(
     ) {
         if (cats.isEmpty()) {
             Text(
-                text = "No favourite cats. \nGo to Cats List to choose your favourites.",
+                text = stringResource(R.string.no_favourite_cats_message),
                 modifier = Modifier
                     .padding(top = 80.dp, start = 30.dp, end = 30.dp)
                     .align(Alignment.CenterHorizontally),
@@ -55,9 +57,9 @@ fun FavouritesListScreen(
 
         if (lifespanAverage != null) {
             Text(
-                text = "Average higher-lifespan: $lifespanAverage years",
+                text = stringResource(R.string.average_lifespan, lifespanAverage),
                 modifier = Modifier
-                    .padding(top = 30.dp)
+                    .padding(top = 70.dp)
                     .align(Alignment.CenterHorizontally),
                 style = MaterialTheme.typography.titleLarge
             )
