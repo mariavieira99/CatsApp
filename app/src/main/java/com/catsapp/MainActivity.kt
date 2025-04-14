@@ -34,6 +34,7 @@ import androidx.navigation.NavController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.catsapp.ui.cats.CatsListScreen
@@ -139,9 +140,21 @@ private fun BottomNavigationBar(
     allCatsGridState: LazyGridState,
     favouriteCatsGridState: LazyGridState,
 ) {
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
 
     val coroutineScope = rememberCoroutineScope()
     val navigationIndex = rememberSaveable { mutableIntStateOf(0) }
+
+    // need to update based on currentRoute since the user can trigger a back navigation on a native back icon
+    when (currentRoute) {
+        Screen.CATS_LIST.route -> navigationIndex.intValue = 0
+        Screen.FAVOURITES_LIST.route -> navigationIndex.intValue = 1
+
+        else -> {
+            // Do nothing
+        }
+    }
 
     val navigationItems = listOf(
         NavigationItem(
