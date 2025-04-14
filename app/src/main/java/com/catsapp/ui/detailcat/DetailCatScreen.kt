@@ -36,6 +36,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.catsapp.model.Cat
+import com.catsapp.ui.theme.Purple40
 import com.catsapp.ui.theme.PurpleGrey80
 import com.swordhealth.catsapp.R
 
@@ -57,7 +58,7 @@ fun DetailCatScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(top = innerPadding.calculateTopPadding(), bottom = 100.dp)
+            .padding(bottom = 100.dp)
             .background(color = PurpleGrey80)
             .verticalScroll(rememberScrollState())
     ) {
@@ -133,7 +134,8 @@ fun CatInformation(cat: Cat, favouriteClickCallback: (() -> Unit)? = null) {
                 )
                 .clickable {
                     favouriteClickCallback?.invoke()
-                }
+                },
+            tint = Purple40,
         )
     }
 

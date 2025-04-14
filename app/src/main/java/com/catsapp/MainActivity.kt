@@ -190,7 +190,7 @@ private fun BottomNavigationBar(
                 label = {
                     Text(
                         text = item.title,
-                        style = MaterialTheme.typography.labelMedium,
+                        style = MaterialTheme.typography.labelLarge,
                         color = if (index == navigationIndex.intValue) Color.Black else Color.Gray
                     )
                 },
