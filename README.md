@@ -17,7 +17,7 @@ An Android app that allows users to explore and manage their favorite cats, buil
 ## Hybrid Data Fetching
 
 - The app follows a **hybrid architecture**, combining **network** and **local database (Room)** sources for a balance between responsiveness and offline support.
-- On **first launch** (or when Room is empty), cat data is fetched from the Cats API on endpoint - https://api.thecatapi.com/v1/breeds. The response is **saved to Room**.
+- On **first launch** (or when Room is empty), cat data is fetched from the Cats API on endpoints - https://api.thecatapi.com/v1/breeds and https://api.thecatapi.com/v1/favourites. The response is **saved to Room**.
 - **Subsequent reads** are served from Room, not the network.
 - This improves performance and resilience to network issues.
 
@@ -27,7 +27,7 @@ An Android app that allows users to explore and manage their favorite cats, buil
 
 ## Internet-Aware Syncing
 
-- If the device goes offline, the periodic sync job is cancelled. When comes back online, the app automatically triggers a sync and fetches the updated data from the CatsAPI and updates the room database and UI in case there were any changes. This ensures up-to-date content even after a connection loss.
+- If the device goes offline, the periodic sync job is cancelled. When comes back online, the app automatically triggers a sync and fetches the updated data from the CatsAPI and updates the room database and UI in case there were any changes. Also, the periodic sync job is triggered again. This ensures up-to-date content even after a connection loss.
 
 ## Favorites: Network as Source of Truth
 
