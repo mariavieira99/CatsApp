@@ -65,17 +65,17 @@ class FavouritesListScreenTest {
         ).allowMainThreadQueries().build()
 
         dao = database.catsDao()
-
-        runBlocking {
-            dao.insertCats(favouritesCatsList)
-        }
-
         repository = CatsRepository(dao)
-        viewModel = FavouritesViewModel(repository)
     }
 
     @Test
     fun catsFavouriteList_displayItems() {
+        runBlocking {
+            dao.insertCats(favouritesCatsList)
+        }
+
+        viewModel = FavouritesViewModel(repository)
+
         rule.setContent {
             FavouritesListScreen(
                 innerPadding = PaddingValues(1.dp),
@@ -91,6 +91,12 @@ class FavouritesListScreenTest {
 
     @Test
     fun catsFavouriteList_displayCorrectAverage() {
+        runBlocking {
+            dao.insertCats(favouritesCatsList)
+        }
+
+        viewModel = FavouritesViewModel(repository)
+
         rule.setContent {
             FavouritesListScreen(
                 innerPadding = PaddingValues(1.dp),
@@ -109,6 +115,8 @@ class FavouritesListScreenTest {
         runBlocking {
             dao.deleteAllCats()
         }
+
+        viewModel = FavouritesViewModel(repository)
 
         rule.setContent {
             FavouritesListScreen(
